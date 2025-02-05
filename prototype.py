@@ -11,8 +11,8 @@ def start_plan_form():
 def get_mileage():
     already_run = input("Do you currently run? ")
     if already_run.lower() not in ["yes", "y"]:
-        run_length = 0
-        num_runs = 0
+        run_length = 2.5
+        num_runs = 4
     else:
         run_length = float(input('Average running distance(km): '))
         num_runs = int(input('Number of runs per week: '))
@@ -23,18 +23,29 @@ def get_mileage():
     return run_length, num_runs, mileage
 
 
-def get_current_pace(target_dist):
-    current_paces = []
+def get_pace(target_dist):
+    current_paces = [float('-inf'), 0]
     running = True
 
     # Find most useful distance combo
     # Most recent or longest? Maybe another question
     while running:
+        print("Let us know a recent pace record")
         dist = float(input('Distance(km): '))
         pace = input("Pace(km/h): ")
-        current_paces.append((dist, pace))
-        if dist >= target_dist:
+
+        if abs(dist - target_dist) < abs(current_paces[0] - target_dist):
+            current_paces = [dist, pace]
+        elif current_paces[0] != 0:
+            print("That was further from your desired distance than your previous entry")
+
+        if abs(dist - target_dist) < target_dist / 2:
             running = False
+        else:
+            have_longer = input("Do you have any paces for runs closer to your desired distance?")
+            if not have_longer.lower() in ["y", "yes"]:
+                running = False
+
 
     return current_paces
 
@@ -68,7 +79,7 @@ def get_target_date(run_length, mileage, target_dist):
 
         return num_weeks, end_date
     
-       
+get_pace(21)
 start_plan_form()
     
 
