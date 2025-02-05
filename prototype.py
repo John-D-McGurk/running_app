@@ -1,16 +1,21 @@
 import datetime
+import math
 
 def start_plan_form():
     run_length, num_runs, mileage = get_mileage()
-
-    
+    target_dist, end_date, weeks_till_end = get_target_dist_date(run_length, mileage)
 
     pace = get_current_pace(target_dist)
 
 
 def get_mileage():
-    run_length = input('Average running distance(km): ')
-    num_runs = input('Number of runs per week: ')
+    already_run = input("Do you currently run? ")
+    if already_run.lower() not in ["yes", "y"]:
+        run_length = 0
+        num_runs = 0
+    else:
+        run_length = float(input('Average running distance(km): '))
+        num_runs = int(input('Number of runs per week: '))
 
     mileage = run_length * num_runs
     #potentially print mileage and ask for confirmation
@@ -34,33 +39,36 @@ def get_current_pace(target_dist):
     return current_paces
 
 def get_target_dist_date(run_length, mileage):
-    target_dist = input("Target distance(km): ")
+    target_dist = float(input("Target distance(km): "))
+    weeks_till_end, recom_end_date = get_target_date(run_length, mileage, target_dist)
 
+    #rename running?
+    running = True
+    while running:
+        end_date = datetime.datetime.strptime(input(f"Target date (recommended soonest {recom_end_date}): "), "%d.%m.%Y").date()                     
 
+        if end_date > recom_end_date:
+            running = False
+        else:
+            user_weeks = (end_date - datetime.date.today()).days / 7
+            percent_increase = (target_dist / (mileage * 0.25)) ** (1 / user_weeks) * 100 - 100
+            print(f"Our recommended maximum mileage increase per week is 10%, your selected date results in an increase of {percent_increase:.1f}%")
+            should_cont = input("Are you sure you want to continue with this date? ")
+            if should_cont.lower() in ["y", "yes"]:
+                running = False
 
-    date = input("Date: ")
+    return target_dist, end_date, weeks_till_end
 
-def get_date_from_target_dist(run_length, mileage, target_dist):
+def get_target_date(run_length, mileage, target_dist):
     if target_dist <= run_length:
-        print('ready')
-        return "Ready now"
+        return 0, "Ready now"
     else:
-        num_weeks_1 = 0
-        while run_length < target_dist:
-            if run_length < 10:
-                run_length += 1
-            else: 
-                run_length += run_length * 0.1
-            num_weeks_1 += 1
+        num_weeks = (math.log(target_dist) - math.log(mileage * 0.25)) / math.log(1.1)
+        end_date = datetime.date.today() + datetime.timedelta(days=round(num_weeks * 7))
 
-        num_weeks_2 = 0
-
-        long_run = mileage * 0.25
-        while long_run < target_dist:
-            long_run += long_run * 0.1
-            num_weeks_2 += 1
-        
-        print(num_weeks_1)
-        print(num_weeks_2)
+        return num_weeks, end_date
+    
+       
+start_plan_form()
     
 
