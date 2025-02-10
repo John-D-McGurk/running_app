@@ -1,11 +1,17 @@
 import datetime
 import math
 
+class Workout:
+    def __init__(self, type, dist, pace=False, ):
+        self.type = type
+        self.dist = dist
+        self.pace = pace
+
 def start_plan_form():
     run_length, num_runs, mileage = get_mileage()
     target_dist, end_date, weeks_till_end = get_target_dist_date(run_length, mileage)
-
-    pace = get_current_pace(target_dist)
+    pace = get_pace(target_dist)
+    workout_types = get_workout_types()
 
 
 def get_mileage():
@@ -19,6 +25,12 @@ def get_mileage():
 
     mileage = run_length * num_runs
     #potentially print mileage and ask for confirmation
+
+    print(f'Do you want to continue with {num_runs} training sessions per week?')
+    confirm_num = input("Type yes or number you want to change to: ")
+    if confirm_num.lower() not in ['y', 'yes']:
+        num_runs = confirm_num
+
 
     return run_length, num_runs, mileage
 
@@ -79,6 +91,30 @@ def get_target_date(run_length, mileage, target_dist):
 
         return num_weeks, end_date
     
+def get_workout_types():
+    print("Please select desired workout types to be included in your plan.")
+    print("e: easy run (strongly recommended) l: long run (recommended), t:tempo run (recommended), i:interval training, s:swim")
+    user_selection = input("Enter choices with space between: ").split()
+    selection_dict = {'l': 'long', 't':'tempo', 'e':'easy', 'i':'interval', 's': 'swim'}
+    parsed_selection = set()
+    for selection in user_selection:
+        try:
+            parsed_selection.add(selection_dict[selection])
+        except KeyError:
+            print(f'You selected {selection}, which is not an available workout type.')
+    return parsed_selection
+
+def create_workouts(num_weeks, num_runs, mileage, targer_dist, workout_types):
+    weeks_per_cycle = math.ceil(len(workout_types / num_runs))
+    num_cycles = math.floor(num_weeks / weeks_per_cycle)
+    
+    plan = {}
+
+    for cycle in range(1, weeks_per_cycle + 1):
+
+
+
+get_workout_types()
 get_pace(21)
 start_plan_form()
     
