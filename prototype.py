@@ -9,7 +9,41 @@ from collections import namedtuple
 #         self.dist = dist
 #         self.pace = pace
 
-def start_plan_form():
+class User:
+    def __init__(self):
+        self.category = None
+        self.five_k_time = None
+        self.level = 1
+
+    def set_category(self, category):
+        self.category = category
+    
+    def set_five_k_time(self, time, distance):
+        self.five_k_time = riegel_formula(distance, time, 5)
+        self.level = get_pace_level(self.five_k_time)
+
+class Plan:
+    def __init__(self, user):
+        self.user = user
+
+def riegel_formula(dist, time, new_dist):
+    """Uses the Riegel formula to predict a time for a new distance based on a time for a known distance."""
+    return time * (new_dist / dist) ** 1.06
+
+def get_pace_level(five_k_time):
+    """Assigns a level based on a 5k time. Maps to 15min = level 100, 33 min = level 50 and 60min = level 1."""
+    return 503.3 - 115.2 * math.log(five_k_time + 18.2)
+
+def get_deriv_pace_level(five_k_time):
+    """Takes the derivative of the pace level function."""
+    return 115.2 / (five_k_time + 18.2)
+
+def get_10_percent_increase_time(pace):
+    neg_deriv = get_deriv_pace_level(pace) * -1
+    return neg_deriv * 1.028 ** 30 * neg_deriv
+
+
+def start_plan_form(user, plan):
     run_length, num_runs, mileage = get_mileage()
     target_dist, end_date, weeks_till_end = get_target_dist_date(run_length, mileage)
     pace = get_pace(target_dist)
@@ -175,8 +209,51 @@ def create_run_plan(total_weeks, num_runs, initial_mileage, target_dist, workout
     desired_final_weekly = target_dist + (num_runs - 1) * min_easy_run  # ensures final long run can be built and easy runs are not trivial
     
     plan = {}
+<<<<<<< HEAD
     weekly_mileage = initial_mileage
     days_of_week = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+=======
+
+    for cycle in range(1, weeks_per_cycle + 1):
+        # Add your logic here for creating workouts
+        plan[cycle] = []
+        for run in range(num_runs):
+            workout_type = workout_types[run % len(workout_types)]
+            plan[cycle].append(Workout(workout_type, mileage / num_runs))
+
+def initialize():
+    user = User()
+    plan = Plan(user)
+    return user, plan
+
+
+def difficulty(distance, pace, pref=6.0, k=1.0, gamma=1.06, delta=2.0):
+    """
+    Calculate the difficulty of a run based on distance (km) and pace (min/km).
+
+    Parameters:
+        distance: The distance of the run in kilometers.
+        pace: The pace in minutes per kilometer (lower is faster).
+        pref: Reference pace (min/km) against which to compare (default 6.0).
+        k: A scaling constant (default 1.0).
+        gamma: Exponent for the distance component (default 1.06, similar to Riegel's exponent).
+        delta: Sensitivity exponent for the pace factor (default 2.0).
+
+    Returns:
+        A difficulty score (the higher, the more challenging the run).
+    """
+    return k * (distance ** gamma) * ((pref / pace) ** delta)
+
+
+
+
+
+if __name__ == "__main__":
+    user, plan = initialize()
+
+    
+    # start_plan_form(user, plan)
+>>>>>>> 2318c6afa68154e876ca6eea4fb0c1d5e18fc32d
     
     # --- Build Phase ---
     for week in range(1, build_weeks + 1):
