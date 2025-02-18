@@ -1,13 +1,13 @@
 import datetime
 import math
-from collections import namedtuple
-
+from queue import PriorityQueue
 
 class Workout:
     def __init__(self, type, dist, pace=False, ):
         self.type = set_type(type)
         self.dist = dist
         self.pace = pace
+        self.priorty_rest_after = 6
 
     def set_type(self, type):
         if type not in ['long', 'easy', 'tempo', 'interval', 'hill', 'swim']:
@@ -55,10 +55,14 @@ class Plan:
         self.target_dist = None
         self.end_date = None
         self.num_weeks = None
+        self.taper_length = None
+        self.taper_start = None
 
     def set_end_date(self, date):
         self.end_date = date
         self.num_weeks = (self.end_date - datetime.date.today()).days / 7
+        self.taper_length = math.round(2 * self.target_dist / 3)
+        self.taper_start = self.end_date - datetime.timedelta(days=math.round(self.taper_length))
 
 
 def riegel_formula(dist, time, new_dist):
@@ -79,11 +83,6 @@ def get_10_perc_pace_inc_time(five_k_time, augment=30):
         return -2 * get_deriv_pace_level(five_k_time)
     else:
         return 1.3 ** (-1 * get_deriv_pace_level(five_k_time - augment)) + 0.64
-
-user = User()
-user.set_five_k_time(45, 5)
-user.mileage = 80
-user.set_category()
 
 
 def start_plan_form(user, plan):
@@ -150,9 +149,28 @@ def get_workout_types(user, plan):
 
     # add in a swap function for user to change workout types
 
+def get_workout_freq(user, plan):
+    if user.category == "Beginner":
+        plan.num_runs = 3
+    elif user.category == "Intermediate":
+        plan.num_runs = 4
+    elif user.category == "Advanced":
+        plan.num_runs = 5
+    else:
+        plan.num_runs = 6
+
+    # add in a swap function for user to change workout frequency
+
 
 def create_workouts(plan):
-   pass
+    weeks_in_cycle = 1
+    if plan.workout_types > plan.num_runs:
+        weeks_in_cycle = math.ceil(plan.workout_types / plan.num_runs)
+    current_weekday = datetime.date.today().weekday()
+    
+    full_weeks_till_taper = plan.num_weeks - (plan.taper_length - plan.taper_start.weekday() - current_weekday) / 7
+
+      
 
 
 
