@@ -57,6 +57,7 @@ class Plan:
         self.num_weeks = None
         self.taper_length = None
         self.taper_start = None
+        self.plan = []
 
     def set_end_date(self, date):
         self.end_date = date
@@ -88,11 +89,12 @@ def get_10_perc_pace_inc_time(five_k_time, augment=30):
 def start_plan_form(user, plan):
     get_mileage(user)
     get_target_dist( plan)
+    get_target_date(user, plan)
     target_pace = input("Do you have a target pace? ")
     if target_pace.lower() in ["yes", "y"]:
         get_pace(user, plan.target_dist)
     get_workout_types(plan)
-    create_workouts(weeks_till_end, num_runs, mileage, target_dist, workout_types)
+    create_workouts(plan)
 
 def get_mileage(user):
     already_run = input("Do you currently run? ")
@@ -133,9 +135,6 @@ def get_pace(user, target_dist):
                 running = False
     
     user.set_five_k_time(pace, dist)
-
-
-
     
 def get_workout_types(user, plan):
     if user.category == "Beginner":
@@ -162,13 +161,21 @@ def get_workout_freq(user, plan):
     # add in a swap function for user to change workout frequency
 
 
-def create_workouts(plan):
+def create_workouts(user, plan):
     weeks_in_cycle = 1
     if plan.workout_types > plan.num_runs:
         weeks_in_cycle = math.ceil(plan.workout_types / plan.num_runs)
     current_weekday = datetime.date.today().weekday()
     
     full_weeks_till_taper = plan.num_weeks - (plan.taper_length - plan.taper_start.weekday() - current_weekday) / 7
+    cycles_till_taper = math.floor(full_weeks_till_taper / weeks_in_cycle)
+
+    for cycle in cycles_till_taper:
+        for week in range(weeks_in_cycle):
+            week_workouts = [None] * 7
+            if 'long' in plan.workout_types:
+
+                week_workouts[6] = Workout('long', )
 
       
 
