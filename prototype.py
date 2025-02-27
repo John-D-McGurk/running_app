@@ -174,7 +174,6 @@ def create_workouts(user, plan):
         for week in range(weeks_in_cycle):
             week_workouts = [None] * 7
             if 'long' in plan.workout_types:
-
                 week_workouts[6] = Workout('long', )
 
       
@@ -191,4 +190,10 @@ def initialize():
 
 
 if __name__ == "__main__":
-    pass
+    dummy_user, dummy_plan = initialize()
+    dummy_user.milage = 30
+    dummy_plan.target_dist = 42.195
+    dummy_plan.set_end_date(datetime.date(2025, 10, 10))
+    dummy_plan.workout_types = ['easy', 'long', 'tempo', 'interval']
+    create_workouts(dummy_user, dummy_plan)
+    
