@@ -9,6 +9,7 @@ class Workout:
 
     def set_type(self, type):
         if type not in ['easy', 'long', 'tempo', 'interval', 'strength', 'cross']:
+            print(type)
             raise ValueError(f"Invalid workout type: {type}")
         self.type = type
         match type:            
@@ -25,10 +26,16 @@ class Workout:
             case 'hill':
                 self.rest_priority = 6
             
-
     def set_distance(self, dist):
         if dist > 0:
             self.dist = dist
+
+    def __str__(self):
+        return f"{self.dist}km {self.type}"
+
+    def __repr__(self):
+        return self.__str__()
+    
 
 class User:
     def __init__(self):
@@ -74,6 +81,9 @@ class Plan:
         self.taper_length = None
         self.taper_start = None
         self.plan = []
+        self.workout_types = []
+#CHANGE THIS!
+        self.num_runs = 4
 
     def set_end_date(self, date):
         self.end_date = date
@@ -183,42 +193,47 @@ def create_workouts(user, plan):
 def assign_types(user, plan):
     weeks_in_cycle = 1
     # Have to change this if every week has to have a long run
-    if plan.workout_types > plan.num_runs:
+    if len(plan.workout_types) > plan.num_runs:
         weeks_in_cycle = math.ceil(plan.workout_types / plan.num_runs)
     current_weekday = datetime.date.today().weekday()
     
     full_weeks_till_taper = plan.num_weeks - (plan.taper_length - plan.taper_start.weekday() - current_weekday) / 7
     cycles_till_taper = math.floor(full_weeks_till_taper / weeks_in_cycle)
-
-    for cycle in cycles_till_taper:
+    prev_week_end_priority = 0
+    for cycle in range(cycles_till_taper):
         # The full set of workout types from the plan.
         base_workouts = list(plan.workout_types)
 
         # Build a candidate list excluding 'long run' (so it can repeat weekly)
-        candidate_workouts = [wt for wt in base_workouts if wt != 'long run']
+        candidate_workouts = [wt for wt in base_workouts if wt != 'long']
         candidate_workouts_objs = []
         for wt in candidate_workouts:
-            candidate_workouts_objs.push(Workout(wt))
-        candidate_workouts_objs.sort(key=lambda wt: Workout(wt).rest_priority, reverse=True)
+            candidate_workouts_objs.append(Workout(wt))
+        candidate_workouts_objs.sort(key=lambda wt: wt.rest_priority, reverse=True)
 
         for week in range(weeks_in_cycle):
             week_workouts = ['Rest Day'] * 7  # Initialize week with rest days
             workouts_this_week = []
 
-            # Always include a long run if available in the plan
-            if 'long run' in base_workouts:
-                workouts_this_week.append(Workout('long run'))
+ 
 
             # Alternate between high and low priority for the rest of the workouts
                       # Build workouts_this_week using alternating selection from candidate_workouts
+                      ###CHANGE THIS BECAUSE IN GENERAL ONLY ONE WEEK
             high_priority_toggle = True
-            while len(workouts_this_week) < plan.num_runs:
-                while len(workouts_this_week) < candidate_workouts:
-                    candidate_workouts.push('easy')
+            long_included = 0
+            if 'long' in base_workouts:
+                long_included = 1
+            while len(workouts_this_week) < plan.num_runs - long_included:
+                while len(workouts_this_week) > len(candidate_workouts):
+                    candidate_workouts.append('easy')
                 next_wt = candidate_workouts.pop(0) if high_priority_toggle else candidate_workouts.pop()
                 workouts_this_week.append(Workout(next_wt))
                 high_priority_toggle = not high_priority_toggle
 
+           # Always include a long run if available in the plan
+            if 'long' in base_workouts:
+                workouts_this_week.append(Workout('long'))
             # Total rest days available in the week
             total_rest_days = 7 - plan.num_runs
 
@@ -227,6 +242,7 @@ def assign_types(user, plan):
             # rest_alloc will hold the number of rest days to insert right after each workout.
             rest_alloc = [0] * len(workouts_this_week)
             # Order workouts by descending rest_priority
+            # Include the previous week's end workout in the order to avoid back-to-back high-priority workouts.
             priority_order = sorted(range(len(workouts_this_week)),
                                     key=lambda i: workouts_this_week[i].rest_priority,
                                     reverse=True)
@@ -238,10 +254,13 @@ def assign_types(user, plan):
                         break
                     rest_alloc[i] += 1
                     remaining_rest -= 1
+            
+    
 
             # Build the final schedule for the week by interleaving each workout with its allocated rest days.
             schedule = []
             for workout, extra_rests in zip(workouts_this_week, rest_alloc):
+                # Move long to end of week                                   
                 schedule.append(workout)
                 # Insert the allocated rest days immediately after the workout.
                 for _ in range(extra_rests):
@@ -267,5 +286,4 @@ if __name__ == "__main__":
     dummy_plan.target_dist = 42.195
     dummy_plan.set_end_date(datetime.date(2025, 10, 10))
     dummy_plan.workout_types = ['easy', 'long', 'tempo', 'interval']
-    create_workouts(dummy_user, dummy_plan)
-    
+    assign_types(dummy_user, dummy_plan)    
