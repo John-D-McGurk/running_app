@@ -78,8 +78,8 @@ class Plan:
     def set_end_date(self, date):
         self.end_date = date
         self.num_weeks = (self.end_date - datetime.date.today()).days / 7
-        self.taper_length = math.round(2 * self.target_dist / 3)
-        self.taper_start = self.end_date - datetime.timedelta(days=math.round(self.taper_length))
+        self.taper_length = round(2 * self.target_dist / 3)
+        self.taper_start = self.end_date - datetime.timedelta(days=round(self.taper_length))
 
 
 def riegel_formula(dist, time, new_dist):
