@@ -1,31 +1,37 @@
 import datetime
 import math
 
+
 class Workout:
-    def __init__(self, type, dist=1, pace=False, ):
+    def __init__(
+        self,
+        type,
+        dist=1,
+        pace=False,
+    ):
         self.set_type(type)
         self.set_distance(dist)
         self.pace = pace
 
     def set_type(self, type):
-        if type not in ['easy', 'long', 'tempo', 'interval', 'strength', 'cross']:
+        if type not in ["easy", "long", "tempo", "interval", "strength", "cross"]:
             print(type)
             raise ValueError(f"Invalid workout type: {type}")
         self.type = type
-        match type:            
-            case 'easy':
+        match type:
+            case "easy":
                 self.rest_priority = 1
-            case 'swim':
+            case "swim":
                 self.rest_priority = 2
-            case 'long':
-                 self.rest_priority = 3
-            case 'interval':
+            case "long":
+                self.rest_priority = 3
+            case "interval":
                 self.rest_priority = 4
-            case 'tempo':
+            case "tempo":
                 self.rest_priority = 5
-            case 'hill':
+            case "hill":
                 self.rest_priority = 6
-            
+
     def set_distance(self, dist):
         if dist > 0:
             self.dist = dist
@@ -35,7 +41,7 @@ class Workout:
 
     def __repr__(self):
         return self.__str__()
-    
+
 
 class User:
     def __init__(self):
@@ -53,8 +59,8 @@ class User:
             pace_weight = self.mileage / (self.mileage + self.pace_level)
         else:
             pace_weight = self.pace_level / (self.mileage + self.pace_level)
-            
-        overall_score = pace_weight * self.pace_level +  (1 - pace_weight) * self.mileage
+
+        overall_score = pace_weight * self.pace_level + (1 - pace_weight) * self.mileage
 
         if overall_score > 80:
             self.category = "Elite"
@@ -65,11 +71,9 @@ class User:
         elif overall_score > 20:
             self.category = "Beginner"
 
-
     def set_five_k_time(self, time, distance):
         self.five_k_time = riegel_formula(distance, time, 5)
         self.pace_level = get_pace_level(self.five_k_time)
-
 
 
 class Plan:
@@ -82,27 +86,32 @@ class Plan:
         self.taper_start = None
         self.plan = []
         self.workout_types = []
-#CHANGE THIS!
-        self.num_runs = 4
+        # CHANGE THIS!
+        self.num_runs = 5
 
     def set_end_date(self, date):
         self.end_date = date
         self.num_weeks = (self.end_date - datetime.date.today()).days / 7
         self.taper_length = round(2 * self.target_dist / 3)
-        self.taper_start = self.end_date - datetime.timedelta(days=round(self.taper_length))
+        self.taper_start = self.end_date - datetime.timedelta(
+            days=round(self.taper_length)
+        )
 
 
 def riegel_formula(dist, time, new_dist):
     """Uses the Riegel formula to predict a time for a new distance based on a time for a known distance."""
     return time * (new_dist / dist) ** 1.06
 
+
 def get_pace_level(five_k_time):
     """Assigns a level based on a 5k time. Maps to 15min = level 100, 33 min = level 50 and 60min = level 1."""
     return 503.3 - 115.2 * math.log(five_k_time + 18.2)
 
+
 def get_deriv_pace_level(five_k_time):
     """Takes the derivative of the pace level function."""
     return -1 * 115.2 / (five_k_time + 18.2)
+
 
 def get_10_perc_pace_inc_time(five_k_time, augment=30):
     """Returns the time for a 10% increase in pace. Current assumption is 4 runs per week."""
@@ -114,7 +123,7 @@ def get_10_perc_pace_inc_time(five_k_time, augment=30):
 
 def start_plan_form(user, plan):
     get_mileage(user)
-    get_target_dist( plan)
+    get_target_dist(plan)
     get_target_date(user, plan)
     target_pace = input("Do you have a target pace? ")
     if target_pace.lower() in ["yes", "y"]:
@@ -122,57 +131,74 @@ def start_plan_form(user, plan):
     get_workout_types(plan)
     create_workouts(plan)
 
+
 def get_mileage(user):
     already_run = input("Do you currently run? ")
     if already_run.lower() not in ["yes", "y"]:
         user.set_category("Beginner")
     else:
-        mileage = float(input('Average weekly running distance(km): '))
+        mileage = float(input("Average weekly running distance(km): "))
 
     user.mileage = mileage
+
 
 def get_target_dist(plan):
     plan.target_dist = float(input("What is your target distance(km)? "))
 
+
 def get_target_date(user, plan):
     recom_date = get_recom_target_date(user, plan)
-    print(f"Based on your current mileage, we recommend an earliest date of {recom_date}")
-    plan.set_end_date(datetime.date.strftime(input("Enter your desired target date (DD-MM-YYYY): "), "%d-%m-%Y"))
+    print(
+        f"Based on your current mileage, we recommend an earliest date of {recom_date}"
+    )
+    plan.set_end_date(
+        datetime.date.strftime(
+            input("Enter your desired target date (DD-MM-YYYY): "), "%d-%m-%Y"
+        )
+    )
+
 
 def get_recom_target_date(user, plan):
-    num_weeks = (math.log(plan.target_dist) - math.log(user.mileage * 0.25)) / math.log(1.1)
+    num_weeks = (math.log(plan.target_dist) - math.log(user.mileage * 0.25)) / math.log(
+        1.1
+    )
     end_date = datetime.date.today() + datetime.timedelta(days=round(num_weeks * 7))
 
     return end_date
+
 
 def get_pace(user, target_dist):
     running = True
 
     while running:
         print("Let us know a recent pace record")
-        dist = float(input('Distance(km): '))
+        dist = float(input("Distance(km): "))
         pace = input("Time(mins): ")
 
         if abs(dist - target_dist) < target_dist / 2:
             running = False
         else:
-            have_longer = input("Do you have any paces for runs closer to your desired distance?")
+            have_longer = input(
+                "Do you have any paces for runs closer to your desired distance?"
+            )
             if have_longer.lower() not in ["y", "yes"]:
                 running = False
-    
+
     user.set_five_k_time(pace, dist)
-    
+
+
 def get_workout_types(user, plan):
     if user.category == "Beginner":
-        plan.workout_types = ['easy', 'long']
+        plan.workout_types = ["easy", "long"]
     elif user.category == "Intermediate":
-        plan.workout_types = ['easy', 'long', 'tempo']
+        plan.workout_types = ["easy", "long", "tempo"]
     elif user.category == "Advanced":
-        plan.workout_types = ['easy', 'long', 'tempo', 'interval', 'strength']
+        plan.workout_types = ["easy", "long", "tempo", "interval", "strength"]
     else:
-        plan.workout_types = ['easy', 'long', 'tempo', 'interval', 'strength', 'cross']
+        plan.workout_types = ["easy", "long", "tempo", "interval", "strength", "cross"]
 
     # add in a swap function for user to change workout types
+
 
 def get_workout_freq(user, plan):
     if user.category == "Beginner":
@@ -189,51 +215,59 @@ def get_workout_freq(user, plan):
 
 def create_workouts(user, plan):
     assign_types(user, plan)
+    assign_distance(user, plan)
+
+    for week in plan.plan:
+        print(week)
+
 
 def assign_types(user, plan):
     weeks_in_cycle = 1
     # Have to change this if every week has to have a long run
     if len(plan.workout_types) > plan.num_runs:
-        weeks_in_cycle = math.ceil(plan.workout_types / plan.num_runs)
+        weeks_in_cycle = math.ceil(len(plan.workout_types) / plan.num_runs)
     current_weekday = datetime.date.today().weekday()
-    
-    full_weeks_till_taper = plan.num_weeks - (plan.taper_length - plan.taper_start.weekday() - current_weekday) / 7
+
+    full_weeks_till_taper = (
+        plan.num_weeks
+        - (plan.taper_length - plan.taper_start.weekday() - current_weekday) / 7
+    )
     cycles_till_taper = math.floor(full_weeks_till_taper / weeks_in_cycle)
-    prev_week_end_priority = 0
     for cycle in range(cycles_till_taper):
         # The full set of workout types from the plan.
         base_workouts = list(plan.workout_types)
 
         # Build a candidate list excluding 'long run' (so it can repeat weekly)
-        candidate_workouts = [wt for wt in base_workouts if wt != 'long']
+        candidate_workouts = [wt for wt in base_workouts if wt != "long"]
         candidate_workouts_objs = []
         for wt in candidate_workouts:
             candidate_workouts_objs.append(Workout(wt))
         candidate_workouts_objs.sort(key=lambda wt: wt.rest_priority, reverse=True)
 
         for week in range(weeks_in_cycle):
-            week_workouts = ['Rest Day'] * 7  # Initialize week with rest days
             workouts_this_week = []
 
- 
-
             # Alternate between high and low priority for the rest of the workouts
-                      # Build workouts_this_week using alternating selection from candidate_workouts
-                      ###CHANGE THIS BECAUSE IN GENERAL ONLY ONE WEEK
+            # Build workouts_this_week using alternating selection from candidate_workouts
+            ###CHANGE THIS BECAUSE IN GENERAL ONLY ONE WEEK
             high_priority_toggle = True
             long_included = 0
-            if 'long' in base_workouts:
+            if "long" in base_workouts:
                 long_included = 1
             while len(workouts_this_week) < plan.num_runs - long_included:
                 while len(workouts_this_week) > len(candidate_workouts):
-                    candidate_workouts.append('easy')
-                next_wt = candidate_workouts.pop(0) if high_priority_toggle else candidate_workouts.pop()
+                    candidate_workouts.append("easy")
+                next_wt = (
+                    candidate_workouts.pop(0)
+                    if high_priority_toggle
+                    else candidate_workouts.pop()
+                )
                 workouts_this_week.append(Workout(next_wt))
                 high_priority_toggle = not high_priority_toggle
 
-           # Always include a long run if available in the plan
-            if 'long' in base_workouts:
-                workouts_this_week.append(Workout('long'))
+            # Always include a long run if available in the plan
+            if "long" in base_workouts:
+                workouts_this_week.append(Workout("long"))
             # Total rest days available in the week
             total_rest_days = 7 - plan.num_runs
 
@@ -243,9 +277,11 @@ def assign_types(user, plan):
             rest_alloc = [0] * len(workouts_this_week)
             # Order workouts by descending rest_priority
             # Include the previous week's end workout in the order to avoid back-to-back high-priority workouts.
-            priority_order = sorted(range(len(workouts_this_week)),
-                                    key=lambda i: workouts_this_week[i].rest_priority,
-                                    reverse=True)
+            priority_order = sorted(
+                range(len(workouts_this_week)),
+                key=lambda i: workouts_this_week[i].rest_priority,
+                reverse=True,
+            )
             remaining_rest = total_rest_days
             # Distribute rest days following the priority order repeatedly until none remain.
             while remaining_rest > 0:
@@ -254,21 +290,63 @@ def assign_types(user, plan):
                         break
                     rest_alloc[i] += 1
                     remaining_rest -= 1
-            
-    
 
             # Build the final schedule for the week by interleaving each workout with its allocated rest days.
             schedule = []
             for workout, extra_rests in zip(workouts_this_week, rest_alloc):
-                # Move long to end of week                                   
+                # Move long to end of week
                 schedule.append(workout)
                 # Insert the allocated rest days immediately after the workout.
                 for _ in range(extra_rests):
-                    schedule.append('Rest Day')
+                    schedule.append("Rest Day")
 
             # Now, week_workouts is our final schedule for the week (exactly 7 days).
-            week_workouts = schedule
-            print(week_workouts)
+            plan.plan.append(schedule)
+
+
+def assign_distance(user, plan):
+    milage = user.milage
+
+    for week in plan.plan:
+        runs_this_week = 0
+        workout_types = []
+        num_types_assigned = 0
+        long_weight = 0
+        interval_weight = 0
+        tempo_weight = 0
+        easy_weight = 0
+        for day in week:
+            if day == "Rest Day":
+                continue
+            runs_this_week += 1
+            workout_types.append(day.type)
+        if "long" in workout_types:
+            long_weight = 1.5 / runs_this_week
+            num_types_assigned += 1
+        if "interval" in workout_types:
+            interval_weight = 0.5 / runs_this_week
+            num_types_assigned += 1
+        if "tempo" in workout_types:
+            tempo_weight = 0.5 / runs_this_week
+            num_types_assigned += 1
+        if "easy" in workout_types:
+            easy_weight = (1 - long_weight - interval_weight - tempo_weight) / (
+                runs_this_week - num_types_assigned
+            )
+        for day in week:
+            if day == "Rest Day":
+                continue
+            if day.type == "long":
+                day.set_distance(round(long_weight * milage))
+            elif day.type == "interval":
+                day.set_distance(round(interval_weight * milage))
+            elif day.type == "tempo":
+                day.set_distance(round(tempo_weight * milage))
+            elif day.type == "easy":
+                day.set_distance(round(easy_weight * milage))
+        
+        if long_weight * milage <= plan.target_dist and long_weight * milage <= 32:
+            milage *= 1.1
 
 
 def initialize():
@@ -277,13 +355,10 @@ def initialize():
     return user, plan
 
 
-
-
-
 if __name__ == "__main__":
     dummy_user, dummy_plan = initialize()
     dummy_user.milage = 30
     dummy_plan.target_dist = 42.195
     dummy_plan.set_end_date(datetime.date(2025, 10, 10))
-    dummy_plan.workout_types = ['easy', 'long', 'tempo', 'interval']
-    assign_types(dummy_user, dummy_plan)    
+    dummy_plan.workout_types = ["easy", "long", "tempo", "interval"]
+    create_workouts(dummy_user, dummy_plan)
